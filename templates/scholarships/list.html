@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% from "_macros.html" import paginate, empty_state with context %}
+{% block title %}Find scholarships{% endblock %}
+{% block page_heading %}Find scholarships{% endblock %}
+{% block content %}
+<div class="msp-page-header">
+    <div>
+        <h1>Scholarship schemes</h1>
+        <p>{{ total }} active scheme{{ '' if total == 1 else 's' }} match your filters. Eligibility is checked on the details page.</p>
+    </div>
+    <a class="btn btn-outline-primary" href="{{ url_for('scholarship.eligibility') }}"><i class="bi bi-patch-check"></i> Check my eligibility</a>
+</div>
+
+<div class="msp-card mb-4">
+    <form method="GET" class="msp-filter-bar row g-2 align-items-end">
+        <div class="col-lg-3 col-md-6">
+            <label class="form-label small" for="q">Search</label>
+            <input id="q" class="form-control" name="q" value="{{ filters.q }}" placeholder="Name or provider">
+        </div>
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label small" for="category">Category</label>
+            <select id="category" class="form-select" name="category">
+                <option value="">Any category</option>
+                {% for c in categories %}<option value="{{ c }}" {{ 'selected' if filters.category == c }}>{{ c }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label small" for="course">Course</label>
+            <input id="course" class="form-control" name="course" value="{{ filters.course }}" placeholder="e.g. MCA">
+        </div>
+        <div class="col-lg-1 col-md-3">
+            <label class="form-label small" for="min_amount">Min ₹</label>
+            <input id="min_amount" class="form-control" name="min_amount" inputmode="decimal" value="{{ filters.min_amount or '' }}">
+        </div>
+        <div class="col-lg-1 col-md-3">
+            <label class="form-label small" for="max_amount">Max ₹</label>
+            <input id="max_amount" class="form-control" name="max_amount" inputmode="decimal" value="{{ filters.max_amount or '' }}">
+        </div>
+        <div class="col-lg-2 col-md-4">
+            <label class="form-label small" for="deadline_before">Deadline on/before</label>
+            <input id="deadline_before" type="date" class="form-control" name="deadline_before" value="{{ filters.deadline_before.isoformat() if filters.deadline_before else '' }}">
+        </div>
+        <div class="col-lg-1 col-md-2 d-flex gap-1">
+            <button class="btn btn-primary w-100" type="submit" title="Apply filters"><i class="bi bi-funnel"></i></button>
+            <a class="btn btn-light" href="{{ url_for('scholarship.list_scholarships') }}" title="Clear filters"><i class="bi bi-x-lg"></i></a>
+        </div>
+    </form>
+</div>
+
+{% if pagination.items %}
+<div class="row g-3">
+    {% for s in pagination.items %}
+    <div class="col-md-6 col-xl-4">
+        <div class="msp-card msp-scholarship-card">
+            <div class="msp-card-body">
+                <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                    <h5 class="mb-0 fw-bold">{{ s.name }}</h5>
+                    {% if s.is_demo %}<span class="msp-badge msp-badge-warning">Demo data</span>{% endif %}
+                </div>
+                <div class="msp-meta mb-3">{{ s.provider or 'Provider not specified' }}</div>
+                <div class="msp-amount mb-1">{{ '₹{:,.0f}'.format(s.scholarship_amount) if s.scholarship_amount else 'Amount not specified' }}<span class="small text-muted fw-normal"> / year</span></div>
+                <div class="msp-meta">
+                    <i class="bi bi-calendar-event"></i>
+                    Deadline: {{ s.application_end_date.strftime('%d %b %Y') if s.application_end_date else 'Not specified' }}
+                </div>
+                {% if s.application_end_date and s.application_end_date < today %}
+                    <div class="small text-danger mt-1">Deadline passed</div>
+                {% endif %}
+            </div>
+            <div class="px-3 pb-3">
+                <a class="btn btn-outline-primary btn-sm w-100" href="{{ url_for('scholarship.detail', scholarship_id=s.id) }}">View details</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+<div class="msp-card mt-4">{{ paginate(pagination) }}</div>
+{% else %}
+<div class="msp-card">
+    {{ empty_state('search', 'No scholarships match these filters', 'Try clearing the filters or searching with a different term.') }}
+</div>
+{% endif %}
+{% endblock %}

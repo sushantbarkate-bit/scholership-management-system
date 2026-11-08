@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge, empty_state with context %}
+{% block title %}My applications{% endblock %}
+{% block page_heading %}My applications{% endblock %}
+{% block content %}
+<div class="msp-page-header">
+    <div>
+        <h1>My applications</h1>
+        <p>Every scholarship you have started, with its current status.</p>
+    </div>
+    <a class="btn btn-primary" href="{{ url_for('scholarship.list_scholarships') }}"><i class="bi bi-search"></i> Find scholarships</a>
+</div>
+
+<div class="msp-card">
+    {% if applications %}
+    <div class="msp-table-wrap">
+        <table class="table msp-table">
+            <thead>
+                <tr><th>Reference</th><th>Scholarship</th><th>Started</th><th>Submitted</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody>
+            {% for app in applications %}
+                <tr>
+                    <td class="fw-semibold">{{ app.reference_number }}</td>
+                    <td>{{ app.scholarship.name }}</td>
+                    <td>{{ app.applied_at.strftime('%d %b %Y') if app.applied_at else '—' }}</td>
+                    <td>{{ app.submitted_at.strftime('%d %b %Y') if app.submitted_at else 'Not yet' }}</td>
+                    <td>{{ status_badge(app.status) }}</td>
+                    <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{{ url_for('application.detail', application_id=app.id) }}">Open</a></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        {{ empty_state('journal-x', 'No applications yet', 'Check your eligibility, then start an application for a scheme you qualify for.') }}
+        <div class="text-center pb-4"><a class="btn btn-outline-primary" href="{{ url_for('scholarship.eligibility') }}">Open eligibility checker</a></div>
+    {% endif %}
+</div>
+{% endblock %}

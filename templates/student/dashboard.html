@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% from "_macros.html" import stat_card, status_badge, empty_state with context %}
+{% block title %}Dashboard{% endblock %}
+{% block page_heading %}Welcome, {{ user.full_name }}{% endblock %}
+{% block content %}
+<div class="msp-page-header">
+    <div>
+        <h1>Your scholarship dashboard</h1>
+        <p>Track your profile, eligibility and applications.</p>
+    </div>
+    <a class="btn btn-primary" href="{{ url_for('scholarship.eligibility') }}"><i class="bi bi-patch-check"></i> Check eligibility</a>
+</div>
+
+{% if profile_percentage < 100 %}
+<div class="msp-card msp-card-body mb-4 border-warning">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+        <div><strong>Complete your profile</strong> <span class="text-muted">— eligibility results depend on it.</span></div>
+        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('student.profile') }}">Complete profile</a>
+    </div>
+    <div class="progress msp-progress"><div class="progress-bar" style="width: {{ profile_percentage }}%"></div></div>
+    <div class="small text-muted mt-1">{{ profile_percentage }}% complete{% if missing_fields %} · Missing: {{ missing_fields|join(', ') }}{% endif %}</div>
+</div>
+{% endif %}
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3">{{ stat_card('collection', summary.active_scholarships, 'Open scholarships') }}</div>
+    <div class="col-6 col-xl-3">{{ stat_card('patch-check', summary.eligible_scholarships, 'Eligible for you (preliminary)', 'success') }}</div>
+    <div class="col-6 col-xl-3">{{ stat_card('hourglass-split', summary.counts.pending + summary.counts.documents_required, 'Pending action or review', 'warning') }}</div>
+    <div class="col-6 col-xl-3">{{ stat_card('check2-circle', summary.counts.approved, 'Approved', 'success') }}</div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="msp-card h-100">
+            <div class="msp-card-header">
+                <span>Recent applications</span>
+                <a class="small" href="{{ url_for('application.list_applications') }}">View all</a>
+            </div>
+            <div class="msp-table-wrap">
+                {% if summary.recent_applications %}
+                <table class="table msp-table">
+                    <thead><tr><th>Reference</th><th>Scholarship</th><th>Status</th></tr></thead>
+                    <tbody>
+                    {% for app in summary.recent_applications %}
+                        <tr>
+                            <td><a href="{{ url_for('application.detail', application_id=app.id) }}">{{ app.reference_number }}</a></td>
+                            <td>{{ app.scholarship.name }}</td>
+                            <td>{{ status_badge(app.status) }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                    {{ empty_state('journal-x', 'No applications yet', 'Find a scholarship and start an application.') }}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="msp-card h-100">
+            <div class="msp-card-header"><span>Recommended for you</span><a class="small" href="{{ url_for('scholarship.list_scholarships') }}">Browse all</a></div>
+            <div class="msp-card-body">
+                {% for scholarship in summary.recommended %}
+                    <div class="d-flex justify-content-between align-items-start py-2 {{ 'border-top' if not loop.first }}">
+                        <div>
+                            <a class="fw-semibold" href="{{ url_for('scholarship.detail', scholarship_id=scholarship.id) }}">{{ scholarship.name }}</a>
+                            <div class="msp-meta">Deadline: {{ scholarship.application_end_date.strftime('%d %b %Y') if scholarship.application_end_date else 'Open' }}</div>
+                        </div>
+                        <span class="msp-amount small">{{ '₹{:,.0f}'.format(scholarship.scholarship_amount) if scholarship.scholarship_amount else '' }}</span>
+                    </div>
+                {% else %}
+                    {{ empty_state('search', 'No matches yet', 'Complete your profile to see schemes you may be eligible for.') }}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

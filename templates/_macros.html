@@ -1,0 +1,109 @@
+{# ---------------------------------------------------------------------------
+   Reusable Jinja macros. Import with:
+     {% from "_macros.html" import render_field, status_badge with context %}
+   ("with context" is needed for macros that read APPLICATION_STATUSES etc.)
+   -------------------------------------------------------------------------- #}
+
+
+{# Form field: label, input (with error styling) and error messages. #}
+{% macro render_field(field, input_class="form-control", rows=None, help_text=None) -%}
+<div class="mb-3">
+    {{ field.label(class="form-label") }}
+    {% set cls = input_class + (" is-invalid" if field.errors else "") %}
+    {% if rows %}
+        {{ field(class=cls, rows=rows) }}
+    {% else %}
+        {{ field(class=cls) }}
+    {% endif %}
+    {% if help_text %}<div class="form-text">{{ help_text }}</div>{% endif %}
+    {% for error in field.errors %}
+        <div class="invalid-feedback d-block">{{ error }}</div>
+    {% endfor %}
+</div>
+{%- endmacro %}
+
+
+{# Flash messages rendered as Bootstrap toasts. #}
+{% macro flash_messages() -%}
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1090;">
+    {% for category, message in messages %}
+    {% set tone = category if category in ['success', 'danger', 'warning', 'info'] else 'info' %}
+    <div class="toast msp-toast show align-items-center text-bg-{{ tone }} border-0 mb-2" role="alert">
+        <div class="d-flex">
+            <div class="toast-body">{{ message }}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+{%- endmacro %}
+
+
+{# Coloured pill for an application status code. #}
+{% macro status_badge(code) -%}
+{% set info = APPLICATION_STATUSES.get(code, (code, 'secondary')) %}
+<span class="msp-badge msp-badge-{{ info[1] }}">{{ info[0] }}</span>
+{%- endmacro %}
+
+
+{# Coloured pill for a document review status. #}
+{% macro doc_badge(code, labels) -%}
+{% set info = labels.get(code, (code, 'secondary')) %}
+<span class="msp-badge msp-badge-{{ info[1] }}">{{ info[0] }}</span>
+{%- endmacro %}
+
+
+{# Page links for a Flask-SQLAlchemy Pagination object. Uses page_url(), a
+   template global that keeps the current query-string filters. #}
+{% macro paginate(pagination) -%}
+{% if pagination and pagination.pages > 1 %}
+<nav aria-label="Pagination" class="d-flex justify-content-between align-items-center flex-wrap gap-2 p-3">
+    <span class="small text-muted">
+        Page {{ pagination.page }} of {{ pagination.pages }} · {{ pagination.total }} result{{ '' if pagination.total == 1 else 's' }}
+    </span>
+    <ul class="pagination pagination-sm mb-0">
+        <li class="page-item {{ 'disabled' if not pagination.has_prev }}">
+            <a class="page-link" href="{{ page_url(pagination.prev_num) if pagination.has_prev else '#' }}">Previous</a>
+        </li>
+        {% for p in pagination.iter_pages(left_edge=1, left_current=2, right_current=2, right_edge=1) %}
+            {% if p %}
+            <li class="page-item {{ 'active' if p == pagination.page }}">
+                <a class="page-link" href="{{ page_url(p) }}">{{ p }}</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">…</span></li>
+            {% endif %}
+        {% endfor %}
+        <li class="page-item {{ 'disabled' if not pagination.has_next }}">
+            <a class="page-link" href="{{ page_url(pagination.next_num) if pagination.has_next else '#' }}">Next</a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
+{%- endmacro %}
+
+
+{# Empty-state panel used by lists and tables. #}
+{% macro empty_state(icon, title, text="") -%}
+<div class="msp-empty">
+    <div class="msp-empty-icon"><i class="bi bi-{{ icon }}"></i></div>
+    <div class="fw-semibold text-dark mt-2">{{ title }}</div>
+    {% if text %}<div class="small mt-1">{{ text }}</div>{% endif %}
+</div>
+{%- endmacro %}
+
+
+{# Dashboard statistic card. tone: primary | success | warning | danger #}
+{% macro stat_card(icon, value, label, tone="primary") -%}
+<div class="msp-card msp-stat h-100">
+    <div class="msp-stat-icon {{ '' if tone == 'primary' else tone }}"><i class="bi bi-{{ icon }}"></i></div>
+    <div>
+        <div class="msp-stat-value">{{ value }}</div>
+        <div class="msp-stat-label">{{ label }}</div>
+    </div>
+</div>
+{%- endmacro %}

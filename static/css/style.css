@@ -1,0 +1,416 @@
+/* ==========================================================================
+   Maharashtra Scholarship Portal - design system
+   Palette: primary #2563EB, secondary #0F172A, background #F8FAFC,
+   success #16A34A, warning #F59E0B, danger #DC2626, border #E2E8F0
+   ========================================================================== */
+
+:root {
+  --msp-primary: #2563eb;
+  --msp-primary-dark: #1d4ed8;
+  --msp-secondary: #0f172a;
+  --msp-bg: #f8fafc;
+  --msp-card: #ffffff;
+  --msp-success: #16a34a;
+  --msp-warning: #f59e0b;
+  --msp-danger: #dc2626;
+  --msp-border: #e2e8f0;
+  --msp-muted: #64748b;
+  --msp-radius: 14px;
+  --msp-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 14px rgba(15, 23, 42, 0.06);
+  --msp-sidebar-width: 250px;
+}
+
+html, body {
+  font-family: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--msp-bg);
+  color: var(--msp-secondary);
+}
+
+body { min-height: 100vh; }
+
+a { color: var(--msp-primary); }
+
+/* ---------- Top bar (public + mobile) ---------- */
+
+.msp-topbar {
+  background: var(--msp-card);
+  border-bottom: 1px solid var(--msp-border);
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+}
+
+.msp-brand {
+  font-weight: 700;
+  color: var(--msp-secondary);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+.msp-brand-mark {
+  width: 34px; height: 34px;
+  border-radius: 10px;
+  background: var(--msp-primary);
+  color: #fff;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-weight: 700;
+}
+
+/* ---------- App shell (logged-in) ---------- */
+
+.msp-shell {
+  display: flex;
+  align-items: stretch;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Full-height dark column behind the sticky sidebar, so the sidebar colour
+   reaches the bottom of long pages (and full-page screenshots). */
+.msp-shell::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: var(--msp-sidebar-width);
+  background: var(--msp-secondary);
+}
+
+.msp-sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  flex: 0 0 var(--msp-sidebar-width);
+  width: var(--msp-sidebar-width);
+  background: var(--msp-secondary);
+  color: #cbd5e1;
+  padding: 1.25rem 1rem;
+  overflow-y: auto;
+  z-index: 1040;
+}
+
+.msp-sidebar .msp-brand { color: #fff; padding: .25rem .5rem 1.25rem; }
+
+.msp-nav-section {
+  font-size: .72rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #64748b;
+  padding: 1rem .75rem .35rem;
+}
+
+.msp-nav-link {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  padding: .55rem .75rem;
+  border-radius: 10px;
+  color: #cbd5e1;
+  text-decoration: none;
+  font-size: .94rem;
+  margin-bottom: 2px;
+}
+
+.msp-nav-link:hover { background: rgba(255,255,255,.07); color: #fff; }
+
+.msp-nav-link.active { background: var(--msp-primary); color: #fff; }
+
+.msp-nav-link .msp-count {
+  margin-left: auto;
+  background: var(--msp-danger);
+  color: #fff;
+  border-radius: 999px;
+  font-size: .72rem;
+  padding: .1rem .5rem;
+}
+
+.msp-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.msp-header {
+  background: var(--msp-card);
+  border-bottom: 1px solid var(--msp-border);
+  padding: .85rem 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 1020;
+}
+
+.msp-content {
+  padding: 1.75rem;
+  flex: 1;
+}
+
+.msp-footer {
+  padding: 1rem 1.75rem;
+  color: var(--msp-muted);
+  font-size: .85rem;
+  border-top: 1px solid var(--msp-border);
+  background: var(--msp-card);
+}
+
+.msp-menu-toggle { display: none; }
+
+@media (max-width: 991.98px) {
+  .msp-shell { display: block; }
+  .msp-shell::before { display: none; }
+  .msp-sidebar {
+    position: fixed;
+    top: 0; bottom: 0; left: 0;
+    height: auto;
+    transform: translateX(-100%);
+    transition: transform .2s ease;
+  }
+  .msp-sidebar.open { transform: translateX(0); }
+  .msp-menu-toggle { display: inline-flex; }
+  .msp-content { padding: 1.1rem 1rem; }
+  .msp-header { padding: .75rem 1rem; }
+}
+
+/* ---------- Page header ---------- */
+
+.msp-page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  margin-bottom: 1.25rem;
+}
+
+.msp-page-header h1 {
+  font-size: 1.45rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.msp-page-header p { margin: .15rem 0 0; color: var(--msp-muted); }
+
+/* ---------- Cards ---------- */
+
+.msp-card {
+  background: var(--msp-card);
+  border: 1px solid var(--msp-border);
+  border-radius: var(--msp-radius);
+  box-shadow: var(--msp-shadow);
+}
+
+.msp-card-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--msp-border);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+}
+
+.msp-card-body { padding: 1.25rem; }
+
+.msp-stat {
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: .9rem;
+}
+
+.msp-stat-icon {
+  width: 46px; height: 46px;
+  border-radius: 12px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 1.25rem;
+  background: #eff6ff;
+  color: var(--msp-primary);
+  flex-shrink: 0;
+}
+
+.msp-stat-icon.success { background: #f0fdf4; color: var(--msp-success); }
+.msp-stat-icon.warning { background: #fffbeb; color: var(--msp-warning); }
+.msp-stat-icon.danger  { background: #fef2f2; color: var(--msp-danger); }
+
+.msp-stat-value { font-size: 1.55rem; font-weight: 700; line-height: 1.1; }
+.msp-stat-label { color: var(--msp-muted); font-size: .85rem; }
+
+/* ---------- Badges ---------- */
+
+.msp-badge {
+  display: inline-block;
+  font-size: .76rem;
+  font-weight: 600;
+  padding: .3rem .65rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.msp-badge-secondary { background: #f1f5f9; color: #475569; }
+.msp-badge-primary   { background: #dbeafe; color: #1e40af; }
+.msp-badge-info      { background: #e0f2fe; color: #075985; }
+.msp-badge-warning   { background: #fef3c7; color: #92400e; }
+.msp-badge-success   { background: #dcfce7; color: #166534; }
+.msp-badge-danger    { background: #fee2e2; color: #991b1b; }
+
+/* ---------- Tables ---------- */
+
+.msp-table-wrap { overflow-x: auto; }
+
+.msp-table {
+  margin: 0;
+  font-size: .93rem;
+}
+
+.msp-table thead th {
+  font-size: .78rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--msp-muted);
+  font-weight: 600;
+  background: #f8fafc;
+  border-bottom: 1px solid var(--msp-border);
+  white-space: nowrap;
+}
+
+.msp-table td, .msp-table th { padding: .85rem 1rem; vertical-align: middle; }
+
+.msp-table tbody tr:hover { background: #f8fbff; }
+
+@media (max-width: 575.98px) {
+  .msp-table { font-size: .85rem; }
+  .msp-table td, .msp-table th { padding: .6rem .55rem; }
+  .msp-table td:first-child { white-space: nowrap; }
+}
+
+/* ---------- Forms ---------- */
+
+.form-control, .form-select {
+  border-radius: 10px;
+  border-color: var(--msp-border);
+  padding: .55rem .8rem;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--msp-primary);
+  box-shadow: 0 0 0 .2rem rgba(37, 99, 235, .15);
+}
+
+.form-label { font-weight: 600; font-size: .9rem; margin-bottom: .35rem; }
+
+.form-text { color: var(--msp-muted); }
+
+.btn { border-radius: 10px; font-weight: 600; padding: .55rem 1.05rem; }
+
+.btn-primary { background: var(--msp-primary); border-color: var(--msp-primary); }
+.btn-primary:hover { background: var(--msp-primary-dark); border-color: var(--msp-primary-dark); }
+
+.btn-outline-primary { color: var(--msp-primary); border-color: var(--msp-primary); }
+
+.btn-sm { padding: .35rem .7rem; font-size: .85rem; }
+
+/* ---------- Filters bar ---------- */
+
+.msp-filter-bar {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--msp-border);
+  background: #fcfdff;
+}
+
+/* ---------- Scholarship cards ---------- */
+
+.msp-scholarship-card { height: 100%; display: flex; flex-direction: column; }
+
+.msp-scholarship-card .msp-card-body { flex: 1; }
+
+.msp-amount { font-size: 1.2rem; font-weight: 700; color: var(--msp-primary); }
+
+.msp-meta { color: var(--msp-muted); font-size: .88rem; }
+
+/* ---------- Progress ---------- */
+
+.msp-progress { height: .65rem; border-radius: 999px; background: #e2e8f0; }
+.msp-progress .progress-bar { background: var(--msp-primary); border-radius: 999px; }
+
+/* ---------- Timeline ---------- */
+
+.msp-timeline { list-style: none; padding: 0; margin: 0; }
+
+.msp-timeline li {
+  position: relative;
+  padding: 0 0 1.1rem 1.6rem;
+  border-left: 2px solid var(--msp-border);
+  margin-left: .45rem;
+}
+
+.msp-timeline li:last-child { border-left-color: transparent; padding-bottom: 0; }
+
+.msp-timeline li::before {
+  content: "";
+  position: absolute;
+  left: -7px; top: 3px;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--msp-primary);
+  box-shadow: 0 0 0 3px #dbeafe;
+}
+
+/* ---------- Empty state ---------- */
+
+.msp-empty {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--msp-muted);
+}
+
+.msp-empty .msp-empty-icon { font-size: 2.2rem; color: #94a3b8; }
+
+/* ---------- Notifications ---------- */
+
+.msp-notification { border-left: 4px solid transparent; }
+.msp-notification.unread { border-left-color: var(--msp-primary); background: #f8fbff; }
+
+/* ---------- Auth layout ---------- */
+
+.msp-auth-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  background: linear-gradient(160deg, #eff6ff 0%, #f8fafc 60%);
+}
+
+.msp-auth-card { width: 100%; max-width: 480px; }
+
+.msp-auth-card .msp-card-body { padding: 1.75rem; }
+
+/* ---------- Landing ---------- */
+
+.msp-hero {
+  background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+  color: #fff;
+  border-radius: 22px;
+  padding: 3.25rem 2.5rem;
+}
+
+.msp-hero h1 { font-weight: 800; font-size: 2.3rem; }
+.msp-hero p { color: #dbeafe; font-size: 1.08rem; }
+
+/* ---------- Print ---------- */
+
+@media print {
+  .msp-sidebar, .msp-header, .msp-footer, .msp-no-print, .msp-menu-toggle { display: none !important; }
+  .msp-shell { display: block; }
+  .msp-content { padding: 0 !important; }
+  body { background: #fff; }
+  .msp-card { box-shadow: none; border: 1px solid #cbd5e1; }
+}

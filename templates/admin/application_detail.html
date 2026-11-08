@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge, doc_badge, render_field, empty_state with context %}
+{% block title %}Review {{ application.reference_number }}{% endblock %}
+{% block page_heading %}Application review{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-2 small">
+    <a href="{{ url_for('admin.applications') }}">Applications</a> / <span class="text-muted">{{ application.reference_number }}</span>
+</nav>
+<div class="msp-page-header">
+    <div>
+        <h1>{{ application.reference_number }} · {{ scholarship.name }}</h1>
+        <p>{{ student.full_name }} ({{ student.email }}) · {{ status_badge(application.status) }}</p>
+    </div>
+    <a class="btn btn-light" href="{{ url_for('admin.student_detail', user_id=student.id) }}"><i class="bi bi-person"></i> Student profile</a>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-8">
+
+        <div class="msp-card mb-3">
+            <div class="msp-card-header"><span>Documents</span>
+                {% if unverified %}<span class="msp-badge msp-badge-warning">{{ unverified|length }} mandatory not verified</span>{% else %}<span class="msp-badge msp-badge-success">All mandatory documents verified</span>{% endif %}
+            </div>
+            <div class="msp-table-wrap">
+            <table class="table msp-table mb-0">
+                <thead><tr><th>Document</th><th>File</th><th>Current status</th><th>Decision</th></tr></thead>
+                <tbody>
+                {% for item in required %}
+                    {% set doc = uploaded.get(item.document_type) %}
+                    <tr>
+                        <td class="fw-semibold">{{ doc_labels.get(item.document_type, item.document_type) }}
+                            {% if item.is_mandatory %}<div class="small text-danger">Mandatory</div>{% endif %}</td>
+                        {% if doc %}
+                        <td>
+                            <a href="{{ url_for('document.view', document_id=doc.id) }}" target="_blank" rel="noopener"><i class="bi bi-eye"></i> {{ doc.file_name }}</a>
+                            <a class="ms-2 small" href="{{ url_for('document.view', document_id=doc.id, download=1) }}"><i class="bi bi-download"></i></a>
+                            <div class="small text-muted">Uploaded {{ doc.uploaded_at.strftime('%d %b %Y') if doc.uploaded_at else '' }}</div>
+                        </td>
+                        <td>{{ doc_badge(doc.status, doc_statuses) }}
+                            {% if doc.remarks %}<div class="small text-muted mt-1">{{ doc.remarks }}</div>{% endif %}</td>
+                        <td style="min-width: 260px;">
+                            <form method="POST" action="{{ url_for('admin.document_review', document_id=doc.id) }}" class="row g-1">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <div class="col-12">
+                                    <select name="status" class="form-select form-select-sm" aria-label="Decision">
+                                        <option value="verified" {{ 'selected' if doc.status == 'verified' }}>Verified</option>
+                                        <option value="resubmission_required" {{ 'selected' if doc.status == 'resubmission_required' }}>Resubmission required</option>
+                                        <option value="rejected" {{ 'selected' if doc.status == 'rejected' }}>Rejected</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <input name="remarks" class="form-control form-control-sm" placeholder="Remarks (required unless verified)" value="{{ doc.remarks or '' }}" maxlength="2000">
+                                </div>
+                                <div class="col-12"><button class="btn btn-sm btn-outline-primary w-100" type="submit">Save decision</button></div>
+                            </form>
+                        </td>
+                        {% else %}
+                        <td colspan="3"><span class="text-muted">Not uploaded yet</span></td>
+                        {% endif %}
+                    </tr>
+                {% else %}
+                    <tr><td colspan="4">{{ empty_state('folder2-open', 'No documents required for this scheme') }}</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            </div>
+        </div>
+
+        <div class="msp-card msp-card-body mb-3">
+            <h6 class="fw-bold mb-3">Decision</h6>
+            {% if application.status in ['approved', 'rejected'] %}
+                <p class="text-muted mb-0">This application is closed ({{ APPLICATION_STATUSES[application.status][0] }}). No further changes are possible.</p>
+            {% elif application.status == 'draft' %}
+                <p class="text-muted mb-0">The student has not submitted this application yet.</p>
+            {% else %}
+            <form method="POST" action="{{ url_for('admin.application_status', application_id=application.id) }}" novalidate class="row g-3">
+                {{ status_form.hidden_tag() }}
+                <div class="col-md-4">{{ render_field(status_form.status, input_class="form-select") }}</div>
+                <div class="col-md-8">{{ render_field(status_form.remarks, rows=2, help_text="Required when requesting documents or rejecting. Shown to the student.") }}</div>
+                <div class="col-12 d-flex flex-wrap gap-2">
+                    <button class="btn btn-primary" type="submit">Update status</button>
+                </div>
+            </form>
+            <div class="small text-muted mt-2">
+                Approval is only possible when every mandatory document is verified{% if unverified %} (currently pending: {{ unverified|join(', ') }}){% endif %}.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="msp-card msp-card-body mb-3">
+            <h6 class="fw-bold mb-2">Student profile</h6>
+            <div class="progress msp-progress mb-1"><div class="progress-bar" style="width: {{ profile_percentage }}%"></div></div>
+            <div class="small text-muted mb-2">{{ profile_percentage }}% complete</div>
+            <dl class="row small mb-0">
+                <dt class="col-5 text-muted">Category</dt><dd class="col-7">{{ profile.category or '—' }}</dd>
+                <dt class="col-5 text-muted">Annual income</dt><dd class="col-7">{{ '₹{:,.2f}'.format(profile.annual_income) if profile.annual_income is not none else '—' }}</dd>
+                <dt class="col-5 text-muted">Course</dt><dd class="col-7">{{ profile.course or '—' }}</dd>
+                <dt class="col-5 text-muted">Academic %</dt><dd class="col-7">{{ profile.academic_percentage or '—' }}</dd>
+                <dt class="col-5 text-muted">State</dt><dd class="col-7">{{ profile.state or '—' }}</dd>
+            </dl>
+        </div>
+
+        <div class="msp-card msp-card-body mb-3">
+            <h6 class="fw-bold mb-2">Eligibility check</h6>
+            <ul class="list-unstyled small mb-0">
+            {% for check in result.checks %}
+                <li class="d-flex gap-2 py-1">
+                    {% if check.passed %}<i class="bi bi-check-circle-fill text-success"></i>{% else %}<i class="bi bi-x-circle-fill text-danger"></i>{% endif %}
+                    <span>{{ check.label }}{% if not check.passed %}: <span class="text-danger">{{ check.reason }}</span>{% endif %}</span>
+                </li>
+            {% endfor %}
+            </ul>
+            {% if not result.eligible %}<div class="alert alert-warning small mt-2 mb-0 py-2">Profile no longer meets all rules. Review before approving.</div>{% endif %}
+        </div>
+
+        <div class="msp-card msp-card-body">
+            <h6 class="fw-bold mb-3">Status history</h6>
+            <ul class="msp-timeline">
+            {% for entry in timeline|reverse %}
+                <li>
+                    <div class="fw-semibold small">{{ APPLICATION_STATUSES.get(entry.new_status, (entry.new_status,))[0] }}</div>
+                    <div class="small text-muted">{{ entry.changed_at.strftime('%d %b %Y, %H:%M') if entry.changed_at else '' }}</div>
+                    {% if entry.remarks %}<div class="small">{{ entry.remarks }}</div>{% endif %}
+                </li>
+            {% else %}
+                <li><span class="text-muted small">No history yet.</span></li>
+            {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

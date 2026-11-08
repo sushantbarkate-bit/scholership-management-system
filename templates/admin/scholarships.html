@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% from "_macros.html" import paginate, empty_state with context %}
+{% block title %}Scholarships{% endblock %}
+{% block page_heading %}Scholarships{% endblock %}
+{% block content %}
+<div class="msp-page-header">
+    <div>
+        <h1>Scholarship schemes</h1>
+        <p>Create schemes, define eligibility rules and required documents.</p>
+    </div>
+    <a class="btn btn-primary" href="{{ url_for('admin.scholarship_create') }}"><i class="bi bi-plus-lg"></i> Add scholarship</a>
+</div>
+
+<div class="msp-card">
+    <form method="GET" class="msp-filter-bar row g-2 align-items-end">
+        <div class="col-md-6">
+            <label class="form-label small" for="q">Search by name</label>
+            <input id="q" class="form-control" name="q" value="{{ q }}">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small" for="state">Status</label>
+            <select id="state" class="form-select" name="state">
+                <option value="">All</option>
+                <option value="active" {{ 'selected' if state == 'active' }}>Active</option>
+                <option value="inactive" {{ 'selected' if state == 'inactive' }}>Closed / inactive</option>
+            </select>
+        </div>
+        <div class="col-md-3 d-flex gap-1">
+            <button class="btn btn-primary w-100" type="submit">Filter</button>
+            <a class="btn btn-light" href="{{ url_for('admin.scholarships') }}" title="Clear"><i class="bi bi-x-lg"></i></a>
+        </div>
+    </form>
+
+    <div class="msp-table-wrap">
+    {% if pagination.items %}
+    <table class="table msp-table mb-0">
+        <thead><tr><th>Scheme</th><th>Amount</th><th>Deadline</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
+        <tbody>
+        {% for s in pagination.items %}
+            <tr>
+                <td>
+                    <a class="fw-semibold" href="{{ url_for('admin.scholarship_detail', scholarship_id=s.id) }}">{{ s.name }}</a>
+                    {% if s.is_demo %}<span class="msp-badge msp-badge-warning ms-1">Demo</span>{% endif %}
+                    <div class="msp-meta">{{ s.provider or '' }}</div>
+                </td>
+                <td>{{ '₹{:,.0f}'.format(s.scholarship_amount) if s.scholarship_amount else '—' }}</td>
+                <td>{{ s.application_end_date.strftime('%d %b %Y') if s.application_end_date else '—' }}
+                    {% if s.application_end_date and s.application_end_date < today %}<div class="small text-danger">Passed</div>{% endif %}</td>
+                <td>{% if s.is_active %}<span class="msp-badge msp-badge-success">Active</span>{% else %}<span class="msp-badge msp-badge-secondary">Inactive</span>{% endif %}</td>
+                <td class="text-end text-nowrap">
+                    <a class="btn btn-sm btn-light" href="{{ url_for('admin.scholarship_detail', scholarship_id=s.id) }}">View</a>
+                    <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin.scholarship_edit', scholarship_id=s.id) }}">Edit</a>
+                    <form method="POST" action="{{ url_for('admin.scholarship_delete', scholarship_id=s.id) }}" class="d-inline"
+                          data-confirm="Delete or deactivate '{{ s.name }}'? Schemes with applications are deactivated, not deleted.">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        {{ empty_state('mortarboard', 'No scholarships found', 'Add a scheme to get started.') }}
+    {% endif %}
+    </div>
+    {{ paginate(pagination) }}
+</div>
+{% endblock %}

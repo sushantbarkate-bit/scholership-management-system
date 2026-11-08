@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge, doc_badge, render_field, empty_state with context %}
+{% block title %}Application {{ application.reference_number }}{% endblock %}
+{% block page_heading %}Application {{ application.reference_number }}{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-2 small">
+    <a href="{{ url_for('application.list_applications') }}">My applications</a> / <span class="text-muted">{{ application.reference_number }}</span>
+</nav>
+
+<div class="msp-page-header">
+    <div>
+        <h1>{{ scholarship.name }}</h1>
+        <p>Reference <strong>{{ application.reference_number }}</strong> · {{ status_badge(application.status) }}</p>
+    </div>
+</div>
+
+{% if application.status == 'documents_required' and application.admin_remarks %}
+<div class="alert alert-warning">
+    <strong>Action needed:</strong> the administrator has asked for more documents. Remarks: {{ application.admin_remarks }}
+</div>
+{% elif application.status == 'rejected' and application.admin_remarks %}
+<div class="alert alert-danger"><strong>Rejected.</strong> Remarks: {{ application.admin_remarks }}</div>
+{% elif application.status == 'approved' %}
+<div class="alert alert-success"><strong>Approved.</strong> Follow the scheme provider's instructions for disbursement. {{ application.admin_remarks or '' }}</div>
+{% endif %}
+
+<div class="row g-3">
+    <div class="col-lg-8">
+
+        <div class="msp-card mb-3">
+            <div class="msp-card-header"><span>Documents</span>
+                {% if missing %}<span class="msp-badge msp-badge-warning">{{ missing|length }} mandatory missing</span>{% else %}<span class="msp-badge msp-badge-success">Mandatory documents uploaded</span>{% endif %}
+            </div>
+            <div class="msp-table-wrap">
+            <table class="table msp-table">
+                <thead><tr><th>Document</th><th>Required</th><th>Uploaded file</th><th>Review</th><th></th></tr></thead>
+                <tbody>
+                {% for item in required %}
+                    {% set doc = uploaded.get(item.document_type) %}
+                    <tr>
+                        <td class="fw-semibold">{{ doc_labels.get(item.document_type, item.document_type) }}</td>
+                        <td>{{ 'Mandatory' if item.is_mandatory else 'Optional' }}</td>
+                        <td>
+                            {% if doc %}
+                                <a href="{{ url_for('document.view', document_id=doc.id) }}" target="_blank" rel="noopener">{{ doc.file_name }}</a>
+                                <div class="small text-muted">Uploaded {{ doc.uploaded_at.strftime('%d %b %Y') if doc.uploaded_at else '' }}</div>
+                            {% else %}<span class="text-muted">Not uploaded</span>{% endif %}
+                        </td>
+                        <td>
+                            {% if doc %}{{ doc_badge(doc.status, doc_statuses) }}
+                                {% if doc.remarks %}<div class="small text-danger mt-1">{{ doc.remarks }}</div>{% endif %}
+                            {% else %}—{% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if doc %}<a class="btn btn-sm btn-light" href="{{ url_for('document.view', document_id=doc.id, download=1) }}">Download</a>{% endif %}
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="5">{{ empty_state('folder2-open', 'No documents are required for this scheme') }}</td></tr>
+                {% endfor %}
+                {# Extra documents uploaded that are not in the required list #}
+                {% for doc in uploaded.values() if doc.document_type not in required|map(attribute='document_type')|list %}
+                    <tr>
+                        <td class="fw-semibold">{{ doc_labels.get(doc.document_type, doc.document_type) }}</td>
+                        <td>Additional</td>
+                        <td><a href="{{ url_for('document.view', document_id=doc.id) }}" target="_blank" rel="noopener">{{ doc.file_name }}</a></td>
+                        <td>{{ doc_badge(doc.status, doc_statuses) }}</td>
+                        <td></td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            </div>
+        </div>
+
+        {% if can_edit %}
+        <div class="msp-card mb-3">
+            <div class="msp-card-header"><span>Upload or replace a document</span></div>
+            <div class="msp-card-body">
+                <form method="POST" action="{{ url_for('application.upload_document', application_id=application.id) }}" enctype="multipart/form-data" class="row g-3 align-items-end">
+                    {{ form.hidden_tag() }}
+                    <div class="col-md-5">{{ render_field(form.document_type, input_class="form-select") }}</div>
+                    <div class="col-md-5">
+                        <label class="form-label" for="file">{{ form.file.label.text }}</label>
+                        {{ form.file(class="form-control", id="file", accept=".pdf,.jpg,.jpeg,.png", **{'data-preview': 'file-name'}) }}
+                        <div class="form-text" id="file-name"></div>
+                        {% for error in form.file.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                    </div>
+                    <div class="col-md-2"><button class="btn btn-primary w-100" type="submit">Upload</button></div>
+                    <div class="col-12 small text-muted">Accepted: PDF, JPG or PNG up to 5 MB. Files are checked for their real type. Re-uploading replaces the previous file.</div>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if application.status == 'draft' %}
+        <div class="msp-card msp-card-body">
+            <h6 class="fw-bold">Ready to submit?</h6>
+            {% if missing %}
+                <p class="text-muted mb-2">Upload these mandatory documents first: <strong>{{ missing|join(', ') }}</strong></p>
+                <button class="btn btn-secondary" disabled>Submit application</button>
+            {% else %}
+                <p class="text-muted mb-2">Once submitted you cannot change your documents unless the administrator asks for more.</p>
+                <form method="POST" action="{{ url_for('application.submit', application_id=application.id) }}" data-confirm="Submit this application? You will not be able to edit it except when documents are requested.">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn btn-success" type="submit"><i class="bi bi-send"></i> Submit application</button>
+                </form>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-4">
+        <div class="msp-card mb-3">
+            <div class="msp-card-header"><span>Eligibility at time of review</span></div>
+            <div class="msp-card-body small">
+                <ul class="list-unstyled mb-0">
+                {% for check in result.checks %}
+                    <li class="d-flex gap-2 py-1">
+                        {% if check.passed %}<i class="bi bi-check-circle-fill text-success"></i>{% else %}<i class="bi bi-x-circle-fill text-danger"></i>{% endif %}
+                        <span>{{ check.label }}{% if not check.passed %}: <span class="text-danger">{{ check.reason }}</span>{% endif %}</span>
+                    </li>
+                {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <div class="msp-card msp-card-body">
+            <h6 class="fw-bold mb-3">Application timeline</h6>
+            <ul class="msp-timeline">
+            {% for entry in timeline|reverse %}
+                <li>
+                    <div class="fw-semibold small">{{ statuses.get(entry.new_status, (entry.new_status,))[0] }}</div>
+                    <div class="small text-muted">{{ entry.changed_at.strftime('%d %b %Y, %H:%M') if entry.changed_at else '' }}</div>
+                    {% if entry.remarks %}<div class="small">{{ entry.remarks }}</div>{% endif %}
+                </li>
+            {% else %}
+                <li><span class="text-muted small">No activity yet.</span></li>
+            {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

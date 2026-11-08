@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% from "_macros.html" import stat_card, status_badge, empty_state with context %}
+{% block title %}Admin dashboard{% endblock %}
+{% block page_heading %}Administration{% endblock %}
+{% block content %}
+<div class="msp-page-header">
+    <div>
+        <h1>Dashboard</h1>
+        <p>Live figures from the database.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-primary" href="{{ url_for('admin.scholarship_create') }}"><i class="bi bi-plus-lg"></i> New scholarship</a>
+        <a class="btn btn-primary" href="{{ url_for('admin.applications', status='submitted') }}"><i class="bi bi-inbox"></i> Review applications</a>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3">{{ stat_card('people', total_students, 'Registered students') }}</div>
+    <div class="col-6 col-xl-3">{{ stat_card('mortarboard', active_scholarships ~ ' / ' ~ total_scholarships, 'Active / total scholarships') }}</div>
+    <div class="col-6 col-xl-3">{{ stat_card('file-earmark-text', total_applications, 'Applications submitted') }}</div>
+    <div class="col-6 col-xl-3">{{ stat_card('hourglass-split', status_counts.submitted + status_counts.under_review, 'Awaiting review', 'warning') }}</div>
+    <div class="col-6 col-xl-3">{{ stat_card('exclamation-circle', status_counts.documents_required, 'Documents requested', 'warning') }}</div>
+    <div class="col-6 col-xl-3">{{ stat_card('check2-circle', status_counts.approved, 'Approved', 'success') }}</div>
+    <div class="col-6 col-xl-3">{{ stat_card('x-circle', status_counts.rejected, 'Rejected', 'danger') }}</div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="msp-card mb-3">
+            <div class="msp-card-header"><span>Recent applications</span><a class="small" href="{{ url_for('admin.applications') }}">View all</a></div>
+            <div class="msp-table-wrap">
+            {% if recent_applications %}
+            <table class="table msp-table">
+                <thead><tr><th>Reference</th><th>Student</th><th>Scholarship</th><th>Status</th></tr></thead>
+                <tbody>
+                {% for app in recent_applications %}
+                    <tr>
+                        <td><a href="{{ url_for('admin.application_detail', application_id=app.id) }}">{{ app.reference_number }}</a></td>
+                        <td>{{ app.student.user.full_name }}</td>
+                        <td>{{ app.scholarship.name }}</td>
+                        <td>{{ status_badge(app.status) }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}{{ empty_state('inbox', 'No applications submitted yet') }}{% endif %}
+            </div>
+        </div>
+
+        <div class="msp-card">
+            <div class="msp-card-header"><span>Applications per scholarship</span></div>
+            <div class="msp-table-wrap">
+            <table class="table msp-table mb-0">
+                <thead><tr><th>Scholarship</th><th>Status</th><th class="text-end">Applications</th></tr></thead>
+                <tbody>
+                {% for scholarship, count in per_scholarship %}
+                    <tr>
+                        <td><a href="{{ url_for('admin.scholarship_detail', scholarship_id=scholarship.id) }}">{{ scholarship.name }}</a></td>
+                        <td>{% if scholarship.is_active %}<span class="msp-badge msp-badge-success">Active</span>{% else %}<span class="msp-badge msp-badge-secondary">Closed</span>{% endif %}</td>
+                        <td class="text-end fw-semibold">{{ count }}</td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="3">{{ empty_state('mortarboard', 'No scholarships yet', 'Create the first scheme to start accepting applications.') }}</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="msp-card">
+            <div class="msp-card-header"><span>Recent registrations</span><a class="small" href="{{ url_for('admin.students') }}">All students</a></div>
+            <div class="msp-card-body">
+            {% for student in recent_students %}
+                <div class="d-flex justify-content-between align-items-center py-2 {{ 'border-top' if not loop.first }}">
+                    <div>
+                        <a class="fw-semibold" href="{{ url_for('admin.student_detail', user_id=student.id) }}">{{ student.full_name }}</a>
+                        <div class="small text-muted">{{ student.email }}</div>
+                    </div>
+                    <span class="small text-muted">{{ student.created_at.strftime('%d %b') if student.created_at else '' }}</span>
+                </div>
+            {% else %}
+                {{ empty_state('person-plus', 'No students registered yet') }}
+            {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% from "_macros.html" import stat_card, empty_state with context %}
+{% block title %}Reports{% endblock %}
+{% block page_heading %}Reports & analytics{% endblock %}
+{% block content %}
+<div class="msp-page-header">
+    <div>
+        <h1>Reports & analytics</h1>
+        <p>Generated from the live database on {{ generated_on.strftime('%d %b %Y') }}. Submitted applications only (drafts are excluded).</p>
+    </div>
+    <div class="d-flex gap-2 msp-no-print">
+        <a class="btn btn-outline-primary" href="{{ url_for('report.export_csv', **request.args) }}"><i class="bi bi-filetype-csv"></i> Export CSV</a>
+        <button class="btn btn-primary" type="button" onclick="window.print()"><i class="bi bi-printer"></i> Print report</button>
+    </div>
+</div>
+
+<div class="msp-card mb-4 msp-no-print">
+    <form method="GET" class="msp-filter-bar row g-2 align-items-end">
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label small" for="date_from">From date</label>
+            <input id="date_from" type="date" class="form-control" name="date_from" value="{{ raw_filters.date_from }}">
+        </div>
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label small" for="date_to">To date</label>
+            <input id="date_to" type="date" class="form-control" name="date_to" value="{{ raw_filters.date_to }}">
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <label class="form-label small" for="scholarship_id">Scholarship</label>
+            <select id="scholarship_id" class="form-select" name="scholarship_id">
+                <option value="">All scholarships</option>
+                {% for s in scholarships %}<option value="{{ s.id }}" {{ 'selected' if filters.scholarship_id == s.id }}>{{ s.name }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label small" for="category">Category</label>
+            <select id="category" class="form-select" name="category">
+                <option value="">All categories</option>
+                {% for c in categories %}<option value="{{ c }}" {{ 'selected' if filters.category == c }}>{{ c }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="col-lg-3 d-flex gap-1">
+            <button class="btn btn-primary w-100" type="submit">Apply filters</button>
+            <a class="btn btn-light" href="{{ url_for('report.index') }}" title="Clear"><i class="bi bi-x-lg"></i></a>
+        </div>
+    </form>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3">{{ stat_card('file-earmark-text', data.total, 'Applications (filtered)') }}</div>
+    <div class="col-6 col-xl-3">{{ stat_card('people', students_total, 'Student registrations (filtered dates)') }}</div>
+    <div class="col-6 col-xl-3">{{ stat_card('check2-circle', data.approved, 'Approved', 'success') }}</div>
+    <div class="col-6 col-xl-3">{{ stat_card('graph-up', data.approval_rate ~ '%', 'Approval rate of decided applications', 'warning') }}</div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-5">
+        <div class="msp-card msp-card-body h-100">
+            <h6 class="fw-bold">Applications by status</h6>
+            <div style="position: relative; height: 260px;"><canvas id="chartStatus" aria-label="Applications by status" role="img"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="msp-card msp-card-body h-100">
+            <h6 class="fw-bold">Monthly application trend</h6>
+            <div style="position: relative; height: 260px;"><canvas id="chartMonthly" aria-label="Monthly trend" role="img"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="msp-card msp-card-body h-100">
+            <h6 class="fw-bold">Applications by scholarship</h6>
+            <div style="position: relative; height: 280px;"><canvas id="chartScholarship" aria-label="Applications by scholarship" role="img"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="msp-card msp-card-body h-100">
+            <h6 class="fw-bold">Applications by category</h6>
+            <div style="position: relative; height: 280px;"><canvas id="chartCategory" aria-label="Applications by category" role="img"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-4">
+        <div class="msp-card h-100">
+            <div class="msp-card-header"><span>Students by course</span></div>
+            <div class="msp-table-wrap">
+            <table class="table msp-table mb-0">
+                <thead><tr><th>Course</th><th class="text-end">Students</th></tr></thead>
+                <tbody>
+                {% for course, count in course_breakdown %}
+                    <tr><td>{{ course }}</td><td class="text-end fw-semibold">{{ count }}</td></tr>
+                {% else %}
+                    <tr><td colspan="2">{{ empty_state('book', 'No course data yet') }}</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="msp-card h-100">
+            <div class="msp-card-header"><span>Document verification</span></div>
+            <div class="msp-table-wrap">
+            <table class="table msp-table mb-0">
+                <thead><tr><th>Document status</th><th class="text-end">Count</th></tr></thead>
+                <tbody>
+                {% for label, count in document_breakdown %}
+                    <tr><td>{{ label }}</td><td class="text-end fw-semibold">{{ count }}</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="msp-card h-100">
+            <div class="msp-card-header"><span>Approved vs rejected</span></div>
+            <div class="msp-card-body">
+                <div class="d-flex justify-content-between small mb-1"><span>Approved</span><strong>{{ data.approved }}</strong></div>
+                <div class="progress msp-progress mb-3"><div class="progress-bar bg-success" style="width: {{ data.approval_rate }}%"></div></div>
+                <div class="d-flex justify-content-between small mb-1"><span>Rejected</span><strong>{{ data.rejected }}</strong></div>
+                <div class="progress msp-progress"><div class="progress-bar bg-danger" style="width: {{ 100 - data.approval_rate if data.decided else 0 }}%"></div></div>
+                <p class="small text-muted mt-3 mb-0">Based on {{ data.decided }} decided application{{ '' if data.decided == 1 else 's' }}.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="msp-card msp-card-body small text-muted">
+    Figures are computed directly from the database at the time of viewing. Eligibility results are preliminary.
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  if (!window.Chart) { return; }
+  var palette = ["#2563EB", "#16A34A", "#F59E0B", "#DC2626", "#0F172A", "#64748B", "#8B5CF6", "#06B6D4"];
+  Chart.defaults.font.family = "'Segoe UI', system-ui, sans-serif";
+  Chart.defaults.color = "#475569";
+
+  var statusLabels = {{ data.by_status|map('first')|list|tojson }};
+  var statusCounts = {{ data.by_status|map('last')|list|tojson }};
+  new Chart(document.getElementById("chartStatus"), {
+    type: "doughnut",
+    data: { labels: statusLabels, datasets: [{ data: statusCounts, backgroundColor: palette }] },
+    options: { maintainAspectRatio: false, plugins: { legend: { position: "bottom" } } }
+  });
+
+  new Chart(document.getElementById("chartMonthly"), {
+    type: "line",
+    data: {
+      labels: {{ data.monthly|map('first')|list|tojson }},
+      datasets: [{ label: "Applications", data: {{ data.monthly|map('last')|list|tojson }},
+                   borderColor: "#2563EB", backgroundColor: "rgba(37,99,235,.12)", fill: true, tension: .3 }]
+    },
+    options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+  });
+
+  new Chart(document.getElementById("chartScholarship"), {
+    type: "bar",
+    data: {
+      labels: {{ data.by_scholarship|map('first')|list|tojson }},
+      datasets: [{ label: "Applications", data: {{ data.by_scholarship|map('last')|list|tojson }}, backgroundColor: "#2563EB", borderRadius: 6 }]
+    },
+    options: { indexAxis: "y", maintainAspectRatio: false, scales: { x: { beginAtZero: true, ticks: { precision: 0 } } }, plugins: { legend: { display: false } } }
+  });
+
+  new Chart(document.getElementById("chartCategory"), {
+    type: "bar",
+    data: {
+      labels: {{ data.by_category|map('first')|list|tojson }},
+      datasets: [{ label: "Applications", data: {{ data.by_category|map('last')|list|tojson }}, backgroundColor: "#16A34A", borderRadius: 6 }]
+    },
+    options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }, plugins: { legend: { display: false } } }
+  });
+})();
+</script>
+{% endblock %}

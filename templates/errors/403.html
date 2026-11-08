@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Access denied{% endblock %}
+{% block content %}
+<div class="msp-card msp-card-body msp-empty">
+    <div class="msp-empty-icon"><i class="bi bi-shield-x"></i></div>
+    <h1 class="h4 mt-2">Access denied</h1>
+    <p>You are not allowed to view this page.</p>
+    <a class="btn btn-primary" href="{{ url_for('public.landing') }}">Go to home</a>
+</div>
+{% endblock %}

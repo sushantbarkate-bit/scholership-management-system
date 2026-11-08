@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.env
+
+# IDE
+.vscode/
+
+# Uploaded documents
+uploads/documents/*
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+venv/
+.env
+__pycache__/
+*.pyc
+.pytest_cache/
+uploads/documents/*

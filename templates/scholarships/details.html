@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge with context %}
+{% block title %}{{ scholarship.name }}{% endblock %}
+{% block page_heading %}Scholarship details{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-2 small">
+    <a href="{{ url_for('scholarship.list_scholarships') }}">Scholarships</a> / <span class="text-muted">{{ scholarship.name }}</span>
+</nav>
+
+<div class="msp-page-header">
+    <div>
+        <h1>{{ scholarship.name }}</h1>
+        <p>{{ scholarship.provider or 'Provider not specified' }}</p>
+    </div>
+    {% if scholarship.is_demo %}<span class="msp-badge msp-badge-warning">Demonstration data – not an official scheme</span>{% endif %}
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="msp-card msp-card-body mb-3">
+            <h6 class="fw-bold">About this scheme</h6>
+            <p class="mb-0">{{ scholarship.description or 'No description has been provided yet.' }}</p>
+        </div>
+
+        <div class="msp-card mb-3">
+            <div class="msp-card-header"><span>Your eligibility (preliminary)</span></div>
+            <div class="msp-card-body">
+                {% if not result.checks %}
+                    <p class="text-muted mb-0">No eligibility conditions have been configured for this scheme.</p>
+                {% endif %}
+                <ul class="list-unstyled mb-0">
+                {% for check in result.checks %}
+                    <li class="d-flex gap-2 py-2 border-bottom">
+                        {% if check.passed %}
+                            <i class="bi bi-check-circle-fill text-success"></i>
+                            <span>{{ check.label }}: <span class="text-muted">{{ check.reason or 'Met' }}</span></span>
+                        {% else %}
+                            <i class="bi bi-x-circle-fill text-danger"></i>
+                            <span><strong>{{ check.label }}:</strong> {{ check.reason }}</span>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+                </ul>
+                <p class="small text-muted mt-3 mb-0">This is a preliminary check based on your profile. It is not an official approval.</p>
+            </div>
+        </div>
+
+        <div class="msp-card">
+            <div class="msp-card-header"><span>Required documents</span></div>
+            <div class="msp-card-body">
+                {% if required_docs %}
+                <ul class="mb-0">
+                    {% for doc in required_docs %}
+                    <li>{{ doc_labels.get(doc.document_type, doc.document_type) }}
+                        {% if doc.is_mandatory %}<span class="msp-badge msp-badge-danger ms-1">Mandatory</span>{% else %}<span class="msp-badge msp-badge-secondary ms-1">Optional</span>{% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                    <p class="text-muted mb-0">The administrator has not listed required documents yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="msp-card msp-card-body">
+            <div class="msp-amount mb-1">{{ '₹{:,.0f}'.format(scholarship.scholarship_amount) if scholarship.scholarship_amount else 'Not specified' }}</div>
+            <div class="msp-meta mb-3">Scholarship amount per year</div>
+            <dl class="row small mb-4">
+                <dt class="col-5 text-muted">Opens</dt>
+                <dd class="col-7">{{ scholarship.application_start_date.strftime('%d %b %Y') if scholarship.application_start_date else 'Not specified' }}</dd>
+                <dt class="col-5 text-muted">Deadline</dt>
+                <dd class="col-7">{{ scholarship.application_end_date.strftime('%d %b %Y') if scholarship.application_end_date else 'Not specified' }}</dd>
+                <dt class="col-5 text-muted">Status</dt>
+                <dd class="col-7">{{ 'Accepting applications' if scholarship.is_active else 'Closed' }}</dd>
+            </dl>
+
+            {% if existing %}
+                <div class="alert alert-info small">You already have an application for this scheme.</div>
+                <a class="btn btn-primary w-100" href="{{ url_for('application.detail', application_id=existing.id) }}">
+                    View my application ({{ existing.status|replace('_', ' ')|title }})
+                </a>
+            {% elif not scholarship.is_active %}
+                <button class="btn btn-secondary w-100" disabled>Applications closed</button>
+            {% elif not result.eligible %}
+                <div class="alert alert-warning small mb-2">
+                    You do not meet all the preliminary criteria, so you cannot apply yet.
+                </div>
+                <button class="btn btn-secondary w-100" disabled>Apply (not eligible)</button>
+            {% elif profile_percentage < 100 %}
+                <div class="alert alert-warning small mb-2">Complete your profile before applying.</div>
+                <a class="btn btn-outline-primary w-100" href="{{ url_for('student.profile') }}">Complete profile</a>
+            {% else %}
+                <form method="POST" action="{{ url_for('application.apply', scholarship_id=scholarship.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn btn-primary w-100" type="submit">Start application</button>
+                </form>
+                <p class="small text-muted mt-2 mb-0">You will upload documents and submit on the next page.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

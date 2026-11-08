@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% from "_macros.html" import render_field, empty_state with context %}
+{% block title %}{{ scholarship.name }}{% endblock %}
+{% block page_heading %}Scholarship{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-2 small">
+    <a href="{{ url_for('admin.scholarships') }}">Scholarships</a> / <span class="text-muted">{{ scholarship.name }}</span>
+</nav>
+<div class="msp-page-header">
+    <div>
+        <h1>{{ scholarship.name }}</h1>
+        <p>{{ scholarship.provider or 'Provider not specified' }} · {{ application_count }} application{{ '' if application_count == 1 else 's' }}</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-primary" href="{{ url_for('admin.scholarship_edit', scholarship_id=scholarship.id) }}"><i class="bi bi-pencil"></i> Edit details</a>
+        <a class="btn btn-light" href="{{ url_for('scholarship.detail', scholarship_id=scholarship.id) }}" target="_blank" rel="noopener">Preview as student</a>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="msp-card mb-3">
+            <div class="msp-card-header"><span>Eligibility rules</span><span class="small text-muted fw-normal">All rules must pass</span></div>
+            <div class="msp-table-wrap">
+            {% if scholarship.eligibility_rules %}
+            <table class="table msp-table mb-0">
+                <thead><tr><th>Criterion</th><th>Operator</th><th>Value</th><th></th></tr></thead>
+                <tbody>
+                {% for rule in scholarship.eligibility_rules %}
+                    <tr>
+                        <td>{{ field_labels.get(rule.criteria_key, (rule.criteria_key,))[0] }}</td>
+                        <td>{{ operator_labels.get(rule.operator, (rule.operator,))[0] }}</td>
+                        <td class="fw-semibold">{{ rule.criteria_value }}</td>
+                        <td class="text-end">
+                            <form method="POST" action="{{ url_for('admin.rule_delete', scholarship_id=scholarship.id, rule_id=rule.id) }}" class="m-0"
+                                  data-confirm="Remove this eligibility rule?">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn btn-sm btn-outline-danger" type="submit">Remove</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+                {{ empty_state('sliders', 'No eligibility rules yet', 'Without rules every student passes the criteria check. Add rules to restrict eligibility.') }}
+            {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="msp-card msp-card-body mb-3">
+            <h6 class="fw-bold mb-3">Add a rule</h6>
+            <form method="POST" action="{{ url_for('admin.rule_add', scholarship_id=scholarship.id) }}" novalidate>
+                {{ rule_form.hidden_tag() }}
+                {{ render_field(rule_form.criteria_key, input_class="form-select") }}
+                {{ render_field(rule_form.operator, input_class="form-select") }}
+                {{ render_field(rule_form.criteria_value, help_text="Numbers for income/percentage. Lists use commas, e.g. OBC,SC,ST. Text is compared case-insensitively.") }}
+                {{ rule_form.submit(class="btn btn-primary w-100") }}
+            </form>
+        </div>
+
+        <div class="msp-card msp-card-body mb-3">
+            <h6 class="fw-bold mb-2">Required documents</h6>
+            {% if scholarship.required_documents %}
+                <ul class="mb-0 small">
+                {% for d in scholarship.required_documents %}
+                    <li>{{ doc_labels.get(d.document_type, d.document_type) }} {% if d.is_mandatory %}<span class="msp-badge msp-badge-danger">Mandatory</span>{% else %}<span class="msp-badge msp-badge-secondary">Optional</span>{% endif %}</li>
+                {% endfor %}
+                </ul>
+            {% else %}<p class="small text-muted mb-0">None configured.</p>{% endif %}
+        </div>
+
+        <div class="msp-card msp-card-body">
+            <h6 class="fw-bold mb-2">Schedule and status</h6>
+            <div class="small">Opens: {{ scholarship.application_start_date.strftime('%d %b %Y') if scholarship.application_start_date else '—' }}</div>
+            <div class="small">Deadline: {{ scholarship.application_end_date.strftime('%d %b %Y') if scholarship.application_end_date else '—' }}</div>
+            <div class="small mb-3">Status: {{ 'Active' if scholarship.is_active else 'Inactive' }}</div>
+            <form method="POST" action="{{ url_for('admin.scholarship_delete', scholarship_id=scholarship.id) }}"
+                  data-confirm="Delete this scholarship? If it has applications it will be deactivated instead.">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-outline-danger" type="submit">Delete or deactivate</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

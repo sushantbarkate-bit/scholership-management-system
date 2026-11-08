@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Page not found{% endblock %}
+{% block content %}
+<div class="msp-card msp-card-body msp-empty">
+    <div class="msp-empty-icon"><i class="bi bi-compass"></i></div>
+    <h1 class="h4 mt-2">Page not found</h1>
+    <p>The page you are looking for does not exist or you do not have access to it.</p>
+    <a class="btn btn-primary" href="{{ url_for('auth.dashboard') if current_user.is_authenticated else url_for('public.landing') }}">Go to home</a>
+</div>
+{% endblock %}

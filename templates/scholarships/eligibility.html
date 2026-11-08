@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% from "_macros.html" import empty_state, stat_card with context %}
+{% block title %}Eligibility checker{% endblock %}
+{% block page_heading %}Eligibility checker{% endblock %}
+{% block content %}
+<div class="msp-page-header">
+    <div>
+        <h1>Eligibility checker</h1>
+        <p>Every active scheme is checked against your profile. Results are preliminary and are not official approvals.</p>
+    </div>
+    <a class="btn btn-outline-primary" href="{{ url_for('student.profile') }}"><i class="bi bi-pencil-square"></i> Update profile</a>
+</div>
+
+{% if profile_percentage < 100 %}
+<div class="alert alert-warning d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <span>Your profile is {{ profile_percentage }}% complete{% if missing_fields %}; missing: {{ missing_fields|join(', ') }}{% endif %}. Results may change once it is complete.</span>
+    <a class="btn btn-sm btn-warning" href="{{ url_for('student.profile') }}">Complete profile</a>
+</div>
+{% endif %}
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6">{{ stat_card('patch-check', eligible|length, 'Preliminarily eligible', 'success') }}</div>
+    <div class="col-md-6">{{ stat_card('x-circle', ineligible|length, 'Not eligible yet', 'danger') }}</div>
+</div>
+
+<div class="msp-card mb-4">
+    <div class="msp-card-header"><span><i class="bi bi-check-circle text-success"></i> Eligible schemes</span></div>
+    {% if eligible %}
+    <div class="msp-table-wrap">
+        <table class="table msp-table">
+            <thead><tr><th>Scheme</th><th>Amount</th><th>Deadline</th><th>Action</th></tr></thead>
+            <tbody>
+            {% for s, result in eligible %}
+                <tr>
+                    <td><a href="{{ url_for('scholarship.detail', scholarship_id=s.id) }}" class="fw-semibold">{{ s.name }}</a>
+                        <div class="msp-meta">{{ s.provider or '' }}</div></td>
+                    <td>{{ '₹{:,.0f}'.format(s.scholarship_amount) if s.scholarship_amount else '—' }}</td>
+                    <td>{{ s.application_end_date.strftime('%d %b %Y') if s.application_end_date else '—' }}</td>
+                    <td>
+                        {% if s.id in existing_ids %}
+                            <span class="msp-badge msp-badge-info">Already applied</span>
+                        {% elif profile_percentage < 100 %}
+                            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('student.profile') }}">Complete profile</a>
+                        {% else %}
+                            <form method="POST" action="{{ url_for('application.apply', scholarship_id=s.id) }}" class="m-0">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn btn-sm btn-primary" type="submit">Apply</button>
+                            </form>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        {{ empty_state('emoji-neutral', 'No eligible schemes right now', 'Review the reasons below, or check back when new schemes open.') }}
+    {% endif %}
+</div>
+
+<div class="msp-card">
+    <div class="msp-card-header"><span><i class="bi bi-x-circle text-danger"></i> Not eligible (with reasons)</span></div>
+    <div class="msp-card-body">
+    {% for s, result in ineligible %}
+        <div class="py-3 {{ 'border-top' if not loop.first }}">
+            <div class="d-flex justify-content-between align-items-start gap-2">
+                <a href="{{ url_for('scholarship.detail', scholarship_id=s.id) }}" class="fw-semibold">{{ s.name }}</a>
+                <span class="msp-meta">{{ '₹{:,.0f}'.format(s.scholarship_amount) if s.scholarship_amount else '' }}</span>
+            </div>
+            <ul class="small text-danger mb-0 mt-1 ps-3">
+                {% for reason in result.reasons %}<li>{{ reason }}</li>{% endfor %}
+            </ul>
+        </div>
+    {% else %}
+        {{ empty_state('check2-all', 'Nothing to show here', 'You are preliminarily eligible for every active scheme.') }}
+    {% endfor %}
+    </div>
+</div>
+{% endblock %}

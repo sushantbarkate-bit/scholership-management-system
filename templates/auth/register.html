@@ -1,0 +1,17 @@
+{% extends "base_auth.html" %}
+{% from "_macros.html" import render_field %}
+{% block title %}Register{% endblock %}
+{% block auth_heading %}Create a student account{% endblock %}
+{% block auth_content %}
+<form method="POST" novalidate>
+    {{ form.hidden_tag() }}
+    {{ render_field(form.full_name) }}
+    {{ render_field(form.email) }}
+    {{ render_field(form.password, help_text="At least 8 characters.") }}
+    {{ render_field(form.confirm_password) }}
+    {{ form.submit(class="btn btn-primary w-100 py-2") }}
+</form>
+<p class="text-center small mt-3 mb-0">
+    Already registered? <a href="{{ url_for('auth.login') }}">Login here</a>
+</p>
+{% endblock %}

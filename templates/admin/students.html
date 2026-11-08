@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% from "_macros.html" import paginate, empty_state with context %}
+{% block title %}Students{% endblock %}
+{% block page_heading %}Students{% endblock %}
+{% block content %}
+<div class="msp-page-header">
+    <div>
+        <h1>Students</h1>
+        <p>Registered students and their profile status.</p>
+    </div>
+</div>
+
+<div class="msp-card">
+    <form method="GET" class="msp-filter-bar row g-2 align-items-end">
+        <div class="col-md-6">
+            <label class="form-label small" for="q">Search by name or email</label>
+            <input id="q" class="form-control" name="q" value="{{ q }}">
+        </div>
+        <div class="col-md-2 d-flex gap-1">
+            <button class="btn btn-primary w-100" type="submit">Search</button>
+            <a class="btn btn-light" href="{{ url_for('admin.students') }}" title="Clear"><i class="bi bi-x-lg"></i></a>
+        </div>
+    </form>
+
+    <div class="msp-table-wrap">
+    {% if pagination.items %}
+    <table class="table msp-table mb-0">
+        <thead><tr><th>Name</th><th>Email</th><th>Course</th><th>Registered</th><th></th></tr></thead>
+        <tbody>
+        {% for user in pagination.items %}
+            <tr>
+                <td class="fw-semibold">{{ user.full_name }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.student_profile.course if user.student_profile and user.student_profile.course else '—' }}</td>
+                <td>{{ user.created_at.strftime('%d %b %Y') if user.created_at else '—' }}</td>
+                <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin.student_detail', user_id=user.id) }}">View</a></td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        {{ empty_state('people', 'No students found', 'Try a different search term.') }}
+    {% endif %}
+    </div>
+    {{ paginate(pagination) }}
+</div>
+{% endblock %}

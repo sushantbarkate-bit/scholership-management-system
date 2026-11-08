@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% from "_macros.html" import paginate, empty_state with context %}
+{% block title %}Notifications{% endblock %}
+{% block page_heading %}Notifications{% endblock %}
+{% block content %}
+<div class="msp-page-header">
+    <div>
+        <h1>Notifications</h1>
+        <p>Updates about your account and applications.</p>
+    </div>
+    {% if unread_notifications %}
+    <form method="POST" action="{{ url_for('notification.mark_all_read') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-outline-primary" type="submit"><i class="bi bi-check2-all"></i> Mark all as read</button>
+    </form>
+    {% endif %}
+</div>
+
+<div class="msp-card">
+{% for n in pagination.items %}
+    <div class="msp-notification p-3 px-4 d-flex justify-content-between gap-3 {{ 'unread' if not n.is_read }} {{ 'border-top' if not loop.first }}">
+        <div>
+            <div class="fw-semibold">
+                {% if not n.is_read %}<span class="msp-badge msp-badge-primary me-1">New</span>{% endif %}
+                {{ n.title }}
+            </div>
+            <div class="small text-muted mt-1">{{ n.message }}</div>
+            <div class="small text-muted mt-1">{{ n.created_at.strftime('%d %b %Y, %H:%M') if n.created_at else '' }}</div>
+        </div>
+        {% if not n.is_read %}
+        <form method="POST" action="{{ url_for('notification.mark_read', notification_id=n.id) }}" class="flex-shrink-0">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-sm btn-light" type="submit">Mark read</button>
+        </form>
+        {% endif %}
+    </div>
+{% else %}
+    {{ empty_state('bell-slash', 'No notifications yet', 'You will be notified when your application moves forward.') }}
+{% endfor %}
+{{ paginate(pagination) }}
+</div>
+{% endblock %}

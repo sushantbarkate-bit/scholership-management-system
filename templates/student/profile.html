@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% from "_macros.html" import render_field %}
+{% block title %}My Profile{% endblock %}
+{% block page_heading %}My Profile{% endblock %}
+{% block content %}
+<div class="msp-page-header">
+    <div>
+        <h1>My profile</h1>
+        <p>Accurate details give more reliable eligibility results.</p>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-4">
+        <div class="msp-card msp-card-body h-100">
+            <h6 class="fw-semibold">Profile completion</h6>
+            <div class="mb-2"><span class="msp-stat-value">{{ completion_percentage }}%</span></div>
+            <div class="progress msp-progress mb-2" role="progressbar" aria-valuenow="{{ completion_percentage }}" aria-valuemin="0" aria-valuemax="100">
+                <div class="progress-bar" style="width: {{ completion_percentage }}%"></div>
+            </div>
+            {% if missing_fields %}
+                <div class="small text-muted mb-1">Still missing:</div>
+                <ul class="small mb-0 ps-3">
+                    {% for field in missing_fields %}<li>{{ field }}</li>{% endfor %}
+                </ul>
+            {% else %}
+                <div class="small text-success"><i class="bi bi-check-circle"></i> All profile fields are complete.</div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div class="msp-card msp-card-body">
+            <form method="POST" novalidate>
+                {{ form.hidden_tag() }}
+
+                <h6 class="text-uppercase text-muted small fw-bold mb-3">Personal information</h6>
+                <div class="row">
+                    <div class="col-md-6">{{ render_field(form.mobile, help_text="10 digits, starting with 6–9.") }}</div>
+                    <div class="col-md-6">{{ render_field(form.date_of_birth) }}</div>
+                    <div class="col-md-6">{{ render_field(form.gender, input_class="form-select") }}</div>
+                    <div class="col-md-6">{{ render_field(form.category, input_class="form-select") }}</div>
+                    <div class="col-12">{{ render_field(form.address, rows=3) }}</div>
+                    <div class="col-md-6">{{ render_field(form.city) }}</div>
+                    <div class="col-md-6">{{ render_field(form.district) }}</div>
+                    <div class="col-md-6">{{ render_field(form.state, help_text="Domicile state.") }}</div>
+                    <div class="col-md-6">{{ render_field(form.pincode) }}</div>
+                </div>
+
+                <h6 class="text-uppercase text-muted small fw-bold mb-3 mt-3">Family income</h6>
+                <div class="row">
+                    <div class="col-md-6">{{ render_field(form.annual_income, help_text="Total annual family income in ₹.") }}</div>
+                </div>
+
+                <h6 class="text-uppercase text-muted small fw-bold mb-3 mt-3">Education</h6>
+                <div class="row">
+                    <div class="col-md-6">{{ render_field(form.course) }}</div>
+                    <div class="col-md-6">{{ render_field(form.college_name) }}</div>
+                    <div class="col-md-6">{{ render_field(form.university_name) }}</div>
+                    <div class="col-md-6">{{ render_field(form.academic_year, help_text="For example 2026-27.") }}</div>
+                    <div class="col-md-6">{{ render_field(form.academic_percentage, help_text="Latest percentage, 0–100.") }}</div>
+                </div>
+
+                <div class="d-flex gap-2 mt-2">
+                    <button type="submit" class="btn btn-primary">Save profile</button>
+                    <a href="{{ url_for('auth.student_dashboard') }}" class="btn btn-light">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

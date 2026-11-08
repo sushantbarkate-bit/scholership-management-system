@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% from "_macros.html" import render_field %}
+{% block title %}{{ 'Edit scholarship' if scholarship else 'New scholarship' }}{% endblock %}
+{% block page_heading %}Scholarships{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-2 small">
+    <a href="{{ url_for('admin.scholarships') }}">Scholarships</a> /
+    <span class="text-muted">{{ 'Edit' if scholarship else 'New' }}</span>
+</nav>
+<div class="msp-page-header">
+    <div>
+        <h1>{{ 'Edit scholarship' if scholarship else 'Add a scholarship' }}</h1>
+        <p>Only enter criteria from the official scheme notification. Eligibility rules are added on the next screen.</p>
+    </div>
+</div>
+
+<form method="POST" novalidate>
+    {{ form.hidden_tag() }}
+    <div class="row g-3">
+        <div class="col-lg-8">
+            <div class="msp-card msp-card-body">
+                <h6 class="fw-bold mb-3">Scheme details</h6>
+                <div class="row">
+                    <div class="col-md-12">{{ render_field(form.name) }}</div>
+                    <div class="col-md-6">{{ render_field(form.provider) }}</div>
+                    <div class="col-md-6">{{ render_field(form.scholarship_amount, help_text="Amount per year in ₹.") }}</div>
+                    <div class="col-12">{{ render_field(form.description, rows=4) }}</div>
+                    <div class="col-md-6">{{ render_field(form.application_start_date) }}</div>
+                    <div class="col-md-6">{{ render_field(form.application_end_date, help_text="Students cannot apply after this date.") }}</div>
+                </div>
+                <div class="form-check form-switch">
+                    {{ form.is_active(class="form-check-input") }}
+                    {{ form.is_active.label(class="form-check-label") }}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="msp-card msp-card-body mb-3">
+                <h6 class="fw-bold mb-2">Required documents</h6>
+                <p class="small text-muted">Tick the documents students must upload. Then tick which of those are mandatory.</p>
+                <div class="mb-3">
+                    <div class="fw-semibold small mb-1">Documents</div>
+                    {% for subfield in form.required_documents %}
+                        <div class="form-check">{{ subfield(class="form-check-input") }} {{ subfield.label(class="form-check-label") }}</div>
+                    {% endfor %}
+                </div>
+                <div>
+                    <div class="fw-semibold small mb-1">Mandatory</div>
+                    {% for subfield in form.mandatory_documents %}
+                        <div class="form-check">{{ subfield(class="form-check-input") }} {{ subfield.label(class="form-check-label") }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="d-grid gap-2">
+                {{ form.submit(class="btn btn-primary") }}
+                <a class="btn btn-light" href="{{ url_for('admin.scholarships') }}">Cancel</a>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}

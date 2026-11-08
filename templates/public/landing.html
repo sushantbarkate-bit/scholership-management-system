@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block content %}
+<section class="msp-hero mb-4">
+    <div class="row align-items-center g-4">
+        <div class="col-lg-8">
+            <span class="badge text-bg-light mb-3">Maharashtra Student Scholarship Portal · Demonstration</span>
+            <h1>Find, check and apply for scholarships in one place.</h1>
+            <p class="mb-4">Create your student profile once, check preliminary eligibility for every active scheme, upload your documents and track each application until a decision is made.</p>
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-light btn-lg fw-semibold" href="{{ url_for('auth.register') }}">Create student account</a>
+                <a class="btn btn-outline-light btn-lg" href="{{ url_for('auth.login') }}">Login</a>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="msp-card p-4 text-dark">
+                <div class="msp-stat-value">{{ active_scholarships }}</div>
+                <div class="msp-stat-label">scholarship schemes currently open for applications</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="row g-3">
+    <div class="col-md-4"><div class="msp-card msp-card-body h-100">
+        <i class="bi bi-person-vcard fs-3 text-primary"></i>
+        <h5 class="mt-2">1. Complete your profile</h5>
+        <p class="text-muted mb-0">Enter your category, family income, course and academic details once.</p>
+    </div></div>
+    <div class="col-md-4"><div class="msp-card msp-card-body h-100">
+        <i class="bi bi-patch-check fs-3 text-primary"></i>
+        <h5 class="mt-2">2. Check eligibility</h5>
+        <p class="text-muted mb-0">See which schemes match your profile and the exact reason for any mismatch.</p>
+    </div></div>
+    <div class="col-md-4"><div class="msp-card msp-card-body h-100">
+        <i class="bi bi-journal-check fs-3 text-primary"></i>
+        <h5 class="mt-2">3. Apply and track</h5>
+        <p class="text-muted mb-0">Upload documents, submit, and follow every status change with notifications.</p>
+    </div></div>
+</div>
+{% endblock %}

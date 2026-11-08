@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% from "_macros.html" import paginate, status_badge, empty_state with context %}
+{% block title %}Applications{% endblock %}
+{% block page_heading %}Applications{% endblock %}
+{% block content %}
+<div class="msp-page-header">
+    <div>
+        <h1>Applications</h1>
+        <p>Review submitted applications, verify documents and record decisions.</p>
+    </div>
+</div>
+
+<div class="msp-card">
+    <form method="GET" class="msp-filter-bar row g-2 align-items-end">
+        <div class="col-lg-3 col-md-6">
+            <label class="form-label small" for="q">Student, email, scholarship or ID</label>
+            <input id="q" class="form-control" name="q" value="{{ filters.q }}">
+        </div>
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label small" for="status">Status</label>
+            <select id="status" class="form-select" name="status">
+                <option value="">All statuses</option>
+                {% for code, info in statuses.items() if code != 'draft' %}
+                    <option value="{{ code }}" {{ 'selected' if filters.status == code }}>{{ info[0] }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label small" for="scholarship_id">Scholarship</label>
+            <select id="scholarship_id" class="form-select" name="scholarship_id">
+                <option value="">All scholarships</option>
+                {% for s in scholarships %}
+                    <option value="{{ s.id }}" {{ 'selected' if filters.scholarship_id == s.id }}>{{ s.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-lg-2 col-md-3">
+            <label class="form-label small" for="date_from">From</label>
+            <input id="date_from" type="date" class="form-control" name="date_from" value="{{ filters.date_from }}">
+        </div>
+        <div class="col-lg-2 col-md-3 d-flex gap-1">
+            <div class="flex-grow-1">
+                <label class="form-label small" for="date_to">To</label>
+                <input id="date_to" type="date" class="form-control" name="date_to" value="{{ filters.date_to }}">
+            </div>
+            <div class="align-self-end d-flex gap-1">
+                <button class="btn btn-primary" type="submit" title="Apply"><i class="bi bi-funnel"></i></button>
+                <a class="btn btn-light" href="{{ url_for('admin.applications') }}" title="Clear"><i class="bi bi-x-lg"></i></a>
+            </div>
+        </div>
+    </form>
+
+    <div class="msp-table-wrap">
+    {% if pagination.items %}
+    <table class="table msp-table mb-0">
+        <thead><tr><th>Reference</th><th>Student</th><th>Scholarship</th><th>Submitted</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+        {% for app in pagination.items %}
+            <tr>
+                <td class="fw-semibold">{{ app.reference_number }}</td>
+                <td>{{ app.student.user.full_name }}<div class="small text-muted">{{ app.student.user.email }}</div></td>
+                <td>{{ app.scholarship.name }}</td>
+                <td>{{ app.submitted_at.strftime('%d %b %Y') if app.submitted_at else '—' }}</td>
+                <td>{{ status_badge(app.status) }}</td>
+                <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin.application_detail', application_id=app.id) }}">Review</a></td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        {{ empty_state('inbox', 'No applications match these filters', 'Clear the filters to see everything.') }}
+    {% endif %}
+    </div>
+    {{ paginate(pagination) }}
+</div>
+{% endblock %}
